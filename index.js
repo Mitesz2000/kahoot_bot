@@ -1,24 +1,58 @@
 import express from "express";
+import Kahoot from "kahoot.js-updated";
 
 const app = express();
+app.use(express.json());
+
 const PORT = process.env.PORT || 3000;
 
-// hogy a Railway lássa, hogy él a szerver
+let activeBots = []; // futó botok listája
+
 app.get("/", (req, res) => {
-  res.send("Kahoot bot server is running 🟢");
+  res.send("Kahoot Bot Server működik 🟢");
 });
 
-// ide fogsz majd POST-ot küldeni a weboldaladról (pin, név, stb.)
-app.post("/start-bot", express.json(), (req, res) => {
-  const { gamePin, name, count } = req.body || {};
+// ====== BOT FLOOD + AUTO ANSWER ======
+app.post("/start", async (req, res) => {
+  const { pin, name = "MateBot", count = 1, autoAnswer = true } = req.body;
 
-  console.log("Bot kérés érkezett:", { gamePin, name, count });
+  if (!pin) return res.json({ error: "No PIN provided." });
 
-  // IDE JÖN KÉSŐBB: itt indítod el a kahoot bote(ke)t
+  for (let i = 0; i < count; i++) {
+    const botName = `${name}_${i}`;
+    const client = new Kahoot();
 
-  res.json({ ok: true, message: "Bot indul (még csak teszt) 🚀" });
+    client.join(pin, botName);
+
+    client.on("Joined", () => {
+      console.log(`Bot joined: ${botName}`);
+    });
+
+    client.on("QuestionStart", (question) => {
+      if (autoAnswer) {
+        const random = Math.floor(Math.random() * question.questionChoices.length);
+        question.answer(random);
+        console.log(`Bot ${botName} válaszolt automatikusan → ${random}`);
+      }
+    });
+
+    client.on("Disconnect", () => {
+      console.log(`Bot disconnected: ${botName}`);
+    });
+
+    activeBots.push(client);
+  }
+
+  res.json({ ok: true, message: `${count} bot csatlakozik...` });
+});
+
+// ===== LEÁLLÍTÁS =====
+app.post("/stop", (req, res) => {
+  activeBots.forEach(bot => bot.leave?.());
+  activeBots = [];
+  res.json({ ok: true, message: "Minden bot leállítva 🔴" });
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Bot szerver fut a ${PORT} porton`);
 });
