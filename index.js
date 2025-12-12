@@ -1,11 +1,9 @@
 import express from "express";
-import Kahoot from "kahoot.js-updated";
 import cors from "cors";
+import Kahoot from "kahoot.js-updated";
 
-app.use(cors());
-
-
-const app = express();
+const app = express();    // ✅ ELŐBB létrejön
+app.use(cors());          // ✅ UTÁNA használjuk
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
