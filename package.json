@@ -9,4 +9,11 @@
   "dependencies": {
     "express": "^4.19.2"
   }
+  {
+  "dependencies": {
+    "express": "^4.19.2",
+    "kahoot.js-updated": "^1.0.0"
+  }
+}
+
 }
